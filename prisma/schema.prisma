@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String            @id
+  name          String
+  email         String            @unique
+  emailVerified Boolean           @default(false)
+  image         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  role          String            @default("engineer")
+  active        Boolean           @default(true)
+  sessions      Session[]
+  accounts      Account[]
+  assignments   VisitAssignment[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+model CustomerCase {
+  id                 String         @id @default(uuid()) @db.Uuid
+  customerName       String
+  addressRaw         String?
+  referenceCode      String?        @unique
+  contactName        String?
+  contactPhone       String?
+  installationStatus String?
+  serviceStatus      String?
+  remark             String?
+  archivedAt         DateTime?
+  archivedReason     String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  devices            Device[]
+  visits             Visit[]
+  events             ServiceEvent[]
+
+  @@index([customerName])
+  @@map("customer_cases")
+}
+
+model Device {
+  id            String         @id @default(uuid()) @db.Uuid
+  caseId        String         @db.Uuid
+  case          CustomerCase   @relation(fields: [caseId], references: [id])
+  type          String
+  identifierRaw String?
+  serialRaw     String?
+  location      String?
+  remark        String?
+  retiredAt     DateTime?
+  retiredReason String?
+  createdAt     DateTime       @default(now())
+  events        ServiceEvent[]
+
+  @@index([caseId])
+  @@map("devices")
+}
+
+model DeviceType {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("device_types")
+}
+
+model Visit {
+  id                  String            @id @default(uuid()) @db.Uuid
+  caseId              String            @db.Uuid
+  case                CustomerCase      @relation(fields: [caseId], references: [id])
+  type                String
+  status              String?
+  tentativeDate       DateTime?         @db.Date
+  tentativeAt         DateTime?
+  bookedAt            DateTime?
+  siteVisitConclusion String?
+  incompleteReason    String?
+  cancellationReason  String?
+  completionSnapshot  Json?
+  remark              String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  assignments         VisitAssignment[]
+  events              VisitEvent[]
+
+  @@index([caseId])
+  @@index([bookedAt])
+  @@index([tentativeAt])
+  @@map("visits")
+}
+
+model VisitAssignment {
+  visitId String  @db.Uuid
+  userId  String
+  role    String
+  isLead  Boolean @default(false)
+  visit   Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@id([visitId, userId])
+  @@index([userId])
+  @@map("visit_assignments")
+}
+
+model ServiceEvent {
+  id        String       @id @default(uuid()) @db.Uuid
+  caseId    String       @db.Uuid
+  case      CustomerCase @relation(fields: [caseId], references: [id])
+  deviceId  String?      @db.Uuid
+  device    Device?      @relation(fields: [deviceId], references: [id])
+  type      String
+  status    String       @default("待處理")
+  remark    String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  visits    VisitEvent[]
+
+  @@index([caseId])
+  @@map("service_events")
+}
+
+model VisitEvent {
+  visitId String       @db.Uuid
+  eventId String       @db.Uuid
+  visit   Visit        @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  event   ServiceEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([visitId, eventId])
+  @@map("visit_events")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  occurredAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([occurredAt])
+  @@map("audit_logs")
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@index([lastRequest])
+  @@map("rate_limits")
+}
