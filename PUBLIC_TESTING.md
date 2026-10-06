@@ -2,13 +2,13 @@
 
 ## Decision
 
-No public deployment was made. The source review found no actual secrets or real customer records. This is conditional readiness for a private-account, fictional-data internet test, not a production certification. Local migration/authentication checks passed; hosted environment and real-device checks remain required before field use.
+The fictional-data test is deployed at https://fielddesk-mobile-test.vercel.app using Vercel Hobby and a dedicated Neon Free database. The source review found no actual secrets or real customer records. This is conditional readiness for a private-account, fictional-data internet test, not a production certification. Local workflow checks and hosted HTTPS/authentication checks passed; physical-device and cellular-network checks remain required.
 
 ## Architecture and findings
 
 - Next.js 16.3.8 App Router, React 19.3, TypeScript; server-rendered pages and React Server Actions. Better Auth routes live under `/api/auth`. Prisma 6.19.3 accesses PostgreSQL; there is no separate API server.
 - Reviewed source, schema, migrations, scripts, tests, package lock, docs and configuration. No `.env` file was found in the repository; `.env.example` contains placeholders. No actual API keys, passwords, provider tokens, private external URLs, source exports or real customer data were found. Local credentials are generated outside the repository; their values were not read or exported.
-- Local Git has zero commits. Authenticated `git ls-remote origin` completed with no advertised refs. There is no reachable published history to scan at this time; deleted/inaccessible GitHub objects cannot be assessed. All application files are currently untracked, so they must be deliberately committed before automatic deployment can work.
+- Published reachable history was reviewed and rewritten with the repository pseudonym and GitHub noreply email. No credentials are committed. Previously public copies or caches cannot be guaranteed erased.
 - `.gitignore` correctly excludes env files, node_modules, Next build output, database dumps and spreadsheets, while permitting `.env.example`. Added Vercel metadata, private-key files, logs and SQL dumps. Prisma migration SQL has an explicit allow rule, so the initial untracked migrations can be committed normally.
 - Public sign-up is disabled. Staff creation is administrator-only; database writes check roles on the server. Technician visit access checks assignment. Prisma queries are structured and text is rendered by React; no raw SQL user-input interpolation or HTML injection was found.
 - Better Auth's default production rate limit used per-instance memory. Changed storage to PostgreSQL with a dedicated migration to share limits across serverless instances. This is basic abuse mitigation, not comprehensive DDoS protection.
@@ -32,7 +32,7 @@ Sources: https://vercel.com/docs/git , https://vercel.com/docs/plans/hobby , htt
 5. Set only server-side `DATABASE_URL`, a freshly generated `BETTER_AUTH_SECRET` (32+ random characters), and `BETTER_AUTH_URL` equal to the exact stable HTTPS deployment origin. Never prefix these with `NEXT_PUBLIC_`. Pick/reserve the stable project hostname before the first deploy. Do not put secrets in this document, GitHub source, CLI arguments or chat.
 6. For the minimal first setup, provision credentials only to Vercel's Production environment (this is Vercel's environment name, not a claim that the app is production-ready). Disable branch preview builds in the Vercel project if no isolated preview database is configured. Never expose these credentials to untrusted PR/preview code or add wildcard trusted origins.
 7. Build uses `prisma generate && next build`. Migrations are deliberately an operator step, not part of every preview build; run `db:deploy` against the hosted test DB before a future schema-changing main-branch deployment. Ordinary main pushes automatically build/deploy to the stable URL after Git integration is connected.
-8. Verify HTTPS, private sign-in, role restrictions, secure session cookies, public sign-up rejection, auth rate limiting and one complete fictional workflow on the hosted app before field use. Share account passwords privately, never in the public README. No hosted URL has yet been created.
+8. Verify HTTPS, private sign-in, role restrictions, secure session cookies, public sign-up rejection, auth rate limiting and one complete fictional workflow on the hosted app before field use. Share account passwords privately, never in the public README. Stable hosted URL: https://fielddesk-mobile-test.vercel.app.
 
 ## Mobile fixes and limits
 
@@ -59,12 +59,10 @@ Still requires actual iOS Safari/Android Chrome testing, particularly native dat
 - `tests/http-auth-security.py` passed: fourth failed login received 429; security headers matched. Rate limit rows persisted in PostgreSQL.
 - `npm audit --omit=dev` reported zero known vulnerabilities at review time. This does not prove the absence of undisclosed vulnerabilities.
 - Browser check of the 390px login viewport: correct mobile viewport, no horizontal overflow, 16px form text, 44px input/button heights. This is a browser viewport check, not a physical phone or cellular network test.
-- No public push or deployment performed. Temporary test processes stopped after verification.
+- Hosted HTTPS login returned 200, anonymous case access redirected to login, all three fictional roles authenticated with correct session roles, technician case access returned 404, and public signup was blocked (400). Temporary local test processes stopped after verification.
 
-## User setup confirmation
+## Hosted setup — 2026-10-06
 
-The user confirmed personal use and an existing Vercel account. Neon Free is approved if no payment is required. The agent browser currently shows the Vercel login page; Neon registration requires user completion (including any verification and service terms). No cloud resources, paid plan, push or deployment have been created.
+The user confirmed personal use and the GitHub app access, server-secret storage and public test deployment. Vercel Hobby imports `johnlamdev/fieldDesk` directly, production branch `main`, Node 22, Next.js preset and `npm run build`. Pushes to main trigger deployments. Neon Free uses a dedicated PostgreSQL database in AWS Singapore with all three reviewed migrations and three fictional role accounts; no local CRM data was copied.
 
-## Setup progress — 2026-10-06
-
-Neon Free project `fielddesk-mobile-test` has been created in AWS Singapore with PostgreSQL only (no paid upgrade or extra services). The reviewed source has been published to `johnlamdev/fieldDesk`. Vercel deployment setup is pending. No database credentials are recorded in this repository, no hosted migration has been applied, and no deployment exists.
+`DATABASE_URL`, `BETTER_AUTH_SECRET` and the stable `BETTER_AUTH_URL` are set in Vercel Production only. Preview deployments have no test database credentials and are not ready for authenticated testing. Future schema changes require reviewed migrations before deployment. Account passwords are shared privately outside the repository.
