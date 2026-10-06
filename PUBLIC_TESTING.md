@@ -64,3 +64,7 @@ Still requires actual iOS Safari/Android Chrome testing, particularly native dat
 ## User setup confirmation
 
 The user confirmed personal use and an existing Vercel account. Neon Free is approved if no payment is required. The agent browser currently shows the Vercel login page; Neon registration requires user completion (including any verification and service terms). No cloud resources, paid plan, push or deployment have been created.
+
+## Setup progress — 2026-10-06
+
+Neon Free project `fielddesk-mobile-test` has been created in AWS Singapore with PostgreSQL only (no paid upgrade or extra services). The reviewed source has been published to `johnlamdev/fieldDesk`. Vercel deployment setup is pending. No database credentials are recorded in this repository, no hosted migration has been applied, and no deployment exists.
